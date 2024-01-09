@@ -1,0 +1,10 @@
+is_push_enabled: false
+push:
+  push_plus_token: ''
+tasks:
+- name: DefaultTask
+  command: echo Nyar!
+  run_on_startup: true
+  schedule: '*/10 * * * * *'
+  restart_after_stop: false
+  enabled: true

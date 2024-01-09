@@ -1,0 +1,37 @@
+[package]
+name = "nyar"
+version = "0.1.0"
+edition = "2021"
+categories = ["schedule", "task"]
+readme = "README-en.md"
+authors = ["initcool <initcoool@gmail.com>"]
+license = "GPL-3.0-or-later"
+documentation = "https://docs.rs/nyar"
+homepage = "https://github.com/limitcool/nyar"
+repository = "https://github.com/limitcool/nyar"
+keywords = ["background", "schedule", "task"]
+description = "nyar is a task management program written in Rust, which allows you to run and manage various tasks in the background, such as scheduled tasks, start tasks, restart tasks, etc."
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+chrono = "0.4.31"
+cron = "0.12.0"
+crossterm = "0.27.0"
+ratatui = "0.25.0"
+serde = { version = "1.0.195", features = ["derive"] }
+serde_json = "1.0.111"
+serde_yaml = "0.9.30"
+tokio = { version = "1.35.1", features = ["full"] }
+tokio-cron-scheduler = "0.9.4"
+tokio-test = "0.4.3"
+tracing = "0.1.40"
+tracing-subscriber = "0.3.18"
+[target.'cfg(any(all(target_arch="aarch64", target_vendor="unknown", target_os="linux"), target_env="musl"))'.dependencies]
+reqwest = { version = "0.11", default-features = false, features = [
+    "json",
+    "cookies",
+    "rustls-tls",
+] }
+
+[target.'cfg(not(any(all(target_arch="aarch64", target_vendor="unknown", target_os="linux"), target_env="musl")))'.dependencies]
+reqwest = { version = "0.11", features = ["cookies", "json"] }
