@@ -1,15 +1,16 @@
 use chrono::Utc;
 use cron::Schedule;
+use directories::ProjectDirs;
+use std::collections::HashMap;
 use std::env::consts::OS;
 use std::fmt;
 use std::fs::File;
 use std::io::Write;
+use std::path::PathBuf;
 use std::process::{Child, Command};
-use std::collections::HashMap;
 mod handle;
 pub use handle::*;
 
-const LOGS_DIR: &str = "logs";
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum TaskStatus {
@@ -35,7 +36,6 @@ impl fmt::Display for TaskStatus {
         var_name
     }
 }
-
 
 #[derive(Debug)]
 pub struct Task {
@@ -90,7 +90,7 @@ impl Task {
     }
 
     pub fn start_subprocess(&mut self) -> Child {
-        if let Err(_) = std::fs::create_dir_all(LOGS_DIR) {}
+        if let Err(_) = std::fs::create_dir_all(logs_dir()) {}
         // 如果用户填写了命令，则使用用户的命令；否则默认使用 "main.py"
         let shell = match OS {
             "windows" => "powershell",
@@ -106,10 +106,13 @@ impl Task {
         }
 
         cmd.arg(self.command.clone().expect("请传入命令"));
-
+        let mut output_file = logs_dir();
+        output_file.push(format!("{}-output.log", self.name));
+        let mut err_file = logs_dir();
+        err_file.push(format!("{}-error.log", self.name));
         // 设置输出流
-        cmd.stdout(File::create(format!("logs/{}-output.log", self.name)).expect("stdout err"));
-        cmd.stderr(File::create(format!("logs/{}-error.log", self.name)).expect("stderr err"));
+        cmd.stdout(File::create(output_file).expect("stdout err"));
+        cmd.stderr(File::create(err_file).expect("stderr err"));
         // 启动子进程
         self.set_status(TaskStatus::Running);
         cmd.spawn().expect("Failed to start subprocess")
@@ -177,8 +180,6 @@ impl Task {
     }
 }
 
-
-
 fn list_tasks(tasks: &HashMap<String, Task>) {
     println!(
         "{: <20}  {: <20}  {: <15}  {: <10}  {: <15}  {: <10}  {: <10}  {: <10}",
@@ -205,4 +206,13 @@ fn list_tasks(tasks: &HashMap<String, Task>) {
             task.completion_count
         );
     }
+}
+
+pub fn logs_dir() -> PathBuf {
+    let proj_dirs =
+        ProjectDirs::from("com", "initcool", "nyar").expect("Failed to get project directories");
+    let mut config_file = PathBuf::from(proj_dirs.config_dir());
+    std::fs::create_dir_all(&config_file).expect("");
+    config_file.push("logs/");
+    return config_file;
 }

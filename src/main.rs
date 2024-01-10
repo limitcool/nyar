@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-
 use tokio::sync::mpsc;
 
 mod config;
@@ -9,9 +8,11 @@ mod task;
 #[allow(unreachable_code)]
 #[tokio::main]
 async fn main() {
+    let config = config::Config::load_default_config().unwrap();
+
     // 创建任务集合，每个任务有自己的 cron 表达式和输出文件
     let mut tasks: HashMap<String, task::Task> = HashMap::new();
-    let config = config::Config::from_file("config.yaml").unwrap();
+    // let config = config::Config::from_file("config.yaml").unwrap();
 
     for task_config in config.clone().tasks {
         let task = task_config.to_task();

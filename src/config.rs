@@ -1,6 +1,8 @@
+use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::Read;
+use std::path::PathBuf;
 use std::str::FromStr;
 
 use crate::task::Task;
@@ -12,8 +14,17 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn from_file(file_path: &str) -> Result<Self, Box<dyn std::error::Error>> {
-        match File::open(file_path) {
+    pub fn config_file() -> PathBuf {
+        let proj_dirs = ProjectDirs::from("com", "initcool", "nyar")
+            .expect("Failed to get project directories");
+        let mut config_file = PathBuf::from(proj_dirs.config_dir());
+        std::fs::create_dir_all(&config_file).expect("");
+        config_file.push("config.yaml");
+        return  config_file;
+    }
+
+    pub fn load_default_config() -> Result<Self, Box<dyn std::error::Error>> {
+        match File::open(Config::config_file()) {
             Ok(mut file) => {
                 let mut content = String::new();
                 file.read_to_string(&mut content).unwrap();
@@ -38,7 +49,7 @@ impl Config {
                 };
 
                 // Write default_config to config.yaml
-                match serde_yaml::to_writer(File::create("config.yaml")?, &default_config) {
+                match serde_yaml::to_writer(File::create(Config::config_file())?, &default_config) {
                     Ok(_) => {
                         println!("Default configuration written to config.yaml");
                         Ok(default_config)
